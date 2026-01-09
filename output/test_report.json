@@ -1,0 +1,40 @@
+{
+  "tool": "RepoAudit-Lite",
+  "description": "基于Qwen API和RepoAudit方法的NPD漏洞检测工具",
+  "scan_time": "2026-01-08T14:27:29.350619",
+  "total_bugs": 2,
+  "bugs": [
+    {
+      "type": "Null Pointer Dereference (NPD)",
+      "file": "benchmark/test.py",
+      "function": "bug_example",
+      "variable": "user",
+      "null_line": 2,
+      "use_line": 5,
+      "severity": "High",
+      "description": "当flag为False时，user变量保持为None，在第5行被解引用",
+      "trigger_condition": "flag == False",
+      "code_snippet": "def bug_example(flag):\n    user = None\n    if flag:\n        user = get_user()\n    return user.name  # NPD漏洞"
+    },
+    {
+      "type": "Null Pointer Dereference (NPD)",
+      "file": "benchmark/test.py",
+      "function": "another_bug",
+      "variable": "data",
+      "null_line": 10,
+      "use_line": 11,
+      "severity": "Critical",
+      "description": "data变量直接在赋值为None后使用，无任何保护",
+      "trigger_condition": "无条件触发",
+      "code_snippet": "def another_bug():\n    data = None\n    return data.process()  # 直接NPD"
+    }
+  ],
+  "summary": {
+    "total": 2,
+    "files_scanned": 1,
+    "by_severity": {
+      "High": 1,
+      "Critical": 1
+    }
+  }
+}

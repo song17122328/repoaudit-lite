@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NPD漏洞检测报告 - RepoAudit-Lite</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        
+        .header h1 {
+            color: #2d3748;
+            font-size: 36px;
+            margin-bottom: 10px;
+        }
+        
+        .header .subtitle {
+            color: #718096;
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+        
+        .header .meta {
+            color: #a0aec0;
+            font-size: 14px;
+        }
+        
+        .summary {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
+        
+        .summary h2 {
+            color: #2d3748;
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        
+        .stat-card .number {
+            font-size: 36px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .stat-card .label {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        
+        .bugs-section h2 {
+            color: white;
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+        
+        .bug-card {
+            background: white;
+            padding: 25px;
+            margin-bottom: 20px;
+            border-radius: 15px;
+            border-left: 6px solid #e53e3e;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .bug-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+        }
+        
+        .bug-card.severity-critical {
+            border-left-color: #742a2a;
+        }
+        
+        .bug-card.severity-high {
+            border-left-color: #e53e3e;
+        }
+        
+        .bug-card.severity-medium {
+            border-left-color: #ed8936;
+        }
+        
+        .bug-card.severity-low {
+            border-left-color: #48bb78;
+        }
+        
+        .bug-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .bug-title {
+            font-size: 20px;
+            color: #2d3748;
+            font-weight: 600;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: bold;
+            color: white;
+            text-transform: uppercase;
+        }
+        
+        .badge-critical {
+            background: linear-gradient(135deg, #742a2a 0%, #9b2c2c 100%);
+        }
+        
+        .badge-high {
+            background: linear-gradient(135deg, #c53030 0%, #e53e3e 100%);
+        }
+        
+        .badge-medium {
+            background: linear-gradient(135deg, #dd6b20 0%, #ed8936 100%);
+        }
+        
+        .badge-low {
+            background: linear-gradient(135deg, #38a169 0%, #48bb78 100%);
+        }
+        
+        .bug-info {
+            margin: 15px 0;
+        }
+        
+        .bug-info-item {
+            margin: 8px 0;
+            color: #4a5568;
+        }
+        
+        .bug-info-label {
+            font-weight: 600;
+            color: #2d3748;
+            display: inline-block;
+            min-width: 100px;
+        }
+        
+        code {
+            background: #edf2f7;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 13px;
+            color: #d53f8c;
+        }
+        
+        .code-snippet {
+            background: #1a202c;
+            color: #e2e8f0;
+            padding: 20px;
+            border-radius: 10px;
+            overflow-x: auto;
+            margin-top: 15px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+        
+        .code-snippet pre {
+            margin: 0;
+        }
+        
+        .footer {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 30px;
+            text-align: center;
+            color: #718096;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔍 NPD漏洞检测报告</h1>
+            <div class="subtitle">基于Qwen API和RepoAudit方法的智能代码安全分析</div>
+            <div class="meta">
+                生成时间：2026年01月08日 14:27:29 | 
+                工具版本：RepoAudit-Lite v1.0
+            </div>
+        </div>
+        
+        <div class="summary">
+            <h2>📊 检测摘要</h2>
+            <div class="stats">
+                <div class="stat-card">
+                    <div class="number">2</div>
+                    <div class="label">发现漏洞</div>
+                </div>
+                <div class="stat-card">
+                    <div class="number">1</div>
+                    <div class="label">扫描文件</div>
+                </div>
+                <div class="stat-card">
+                    <div class="number">1</div>
+                    <div class="label">Critical</div>
+                </div>
+                <div class="stat-card">
+                    <div class="number">1</div>
+                    <div class="label">High</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bugs-section">
+            <h2>🐛 漏洞详情</h2>
+
+            <div class="bug-card severity-high">
+                <div class="bug-header">
+                    <div class="bug-title">漏洞 #1: bug_example</div>
+                    <span class="badge badge-high">High</span>
+                </div>
+                
+                <div class="bug-info">
+                    <div class="bug-info-item">
+                        <span class="bug-info-label">漏洞类型：</span>
+                        Null Pointer Dereference (NPD)
+                    </div>
+                    <div class="bug-info-item">
+                        <span class="bug-info-label">文件路径：</span>
+                        <code>benchmark/test.py</code>
+                    </div>
+                    <div class="bug-info-item">
+                        <span class="bug-info-label">变量名称：</span>
+                        <code>user</code>
+                    </div>
+                    <div class="bug-info-item">
+                        <span class="bug-info-label">漏洞位置：</span>
+                        第 2 行（NULL赋值）→ 第 5 行（使用）
+                    </div>
+                    <div class="bug-info-item">
+                        <span class="bug-info-label">触发条件：</span>
+                        flag == False
+                    </div>
+                    <div class="bug-info-item">
+                        <span class="bug-info-label">路径分析：</span>
+                        当flag为False时，user变量保持为None，在第5行被解引用
+                    </div>
+                </div>
+                
+                <div class="code-snippet">
+                    <pre>def bug_example(flag):
+    user = None
+    if flag:
+        user = get_user()
+    return user.name  # NPD漏洞</pre>
+                </div>
+            </div>
+
+            <div class="bug-card severity-critical">
+                <div class="bug-header">
+                    <div class="bug-title">漏洞 #2: another_bug</div>
+                    <span class="badge badge-critical">Critical</span>
+                </div>
+                
+                <div class="bug-info">
+                    <div class="bug-info-item">
+                        <span class="bug-info-label">漏洞类型：</span>
+                        Null Pointer Dereference (NPD)
+                    </div>
+                    <div class="bug-info-item">
+                        <span class="bug-info-label">文件路径：</span>
+                        <code>benchmark/test.py</code>
+                    </div>
+                    <div class="bug-info-item">
+                        <span class="bug-info-label">变量名称：</span>
+                        <code>data</code>
+                    </div>
+                    <div class="bug-info-item">
+                        <span class="bug-info-label">漏洞位置：</span>
+                        第 10 行（NULL赋值）→ 第 11 行（使用）
+                    </div>
+                    <div class="bug-info-item">
+                        <span class="bug-info-label">触发条件：</span>
+                        无条件触发
+                    </div>
+                    <div class="bug-info-item">
+                        <span class="bug-info-label">路径分析：</span>
+                        data变量直接在赋值为None后使用，无任何保护
+                    </div>
+                </div>
+                
+                <div class="code-snippet">
+                    <pre>def another_bug():
+    data = None
+    return data.process()  # 直接NPD</pre>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>本报告由 RepoAudit-Lite 自动生成</p>
+            <p>基于论文：RepoAudit (ICML 2025) | LLM提供方：阿里云Qwen</p>
+        </div>
+    </div>
+</body>
+</html>
